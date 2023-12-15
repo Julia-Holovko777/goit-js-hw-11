@@ -16,8 +16,7 @@ const lightbox = new SimpleLightbox('.gallery a', {
   captionPosition: 'top',
 });
 searchForm.addEventListener('submit', onValueSubmit);
-window.addEventListener('scroll', onScroll);
-// btnLoadMore.addEventListener('click', onLoadMore);
+btnLoadMore.addEventListener('click', onLoadMore);
 
 function onValueSubmit(event) {
   event.preventDefault();
@@ -28,6 +27,7 @@ function onValueSubmit(event) {
     return Notiflix.Notify.warning('Please type something to search');
   }
   localStorage.setItem('key', enteredValue);
+  currentSum = 0;
   page = 1;
   render();
   searchForm.reset();
@@ -41,48 +41,36 @@ async function render() {
       Notiflix.Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
+    } else {
+      gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+      check(data.hits.length, data.totalHits);
+      lightbox.refresh();
     }
-    gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
-    check(data.hits.length, data.totalHits);
-    lightbox.refresh();
   } catch (error) {
     console.log('error', error);
   }
 }
 
-// async function onLoadMore() {
-//   try {
-//     page += 1;
-//     const q = localStorage.getItem('key');
-//     const data = await fetchImage(q, page);
-//     await render();
-//   } catch (error) {
-//     console.log('error', error);
-//   }
-//   lightbox.refresh();
-// }
-
-async function onScroll() {
-  const scrollThreshold =
-    document.documentElement.scrollHeight - window.innerHeight - 300;
-
-  if (window.scrollY > scrollThreshold) {
+async function onLoadMore() {
+  try {
     page += 1;
     const q = localStorage.getItem('key');
     const data = await fetchImage(q, page);
     await render();
-    lightbox.refresh();
+  } catch (error) {
+    console.log('error', error);
   }
+  lightbox.refresh();
 }
 
 function check(current, total) {
   currentSum += current;
   if (currentSum >= total) {
-    // btnLoadMore.classList.add('visibility-hidden');
-    Notiflix.Notify.info(
+    btnLoadMore.classList.add('visibility-hidden');
+    return Notiflix.Notify.info(
       "We're sorry, but you've reached the end of search results."
     );
   }
-  // Notiflix.Notify.success(`Hooray! We found ${currentSum} of ${total}images.`);
-  // btnLoadMore.classList.remove('visibility-hidden');
+  Notiflix.Notify.success(`Hooray! We found ${currentSum} of ${total}images.`);
+  btnLoadMore.classList.remove('visibility-hidden');
 }
